@@ -8,6 +8,7 @@ function App() {
   const [feedUrl, setFeedUrl] = useState('');
   const [feedData, setFeedData] = useState(null);
   const [error, setError] = useState(null);
+  localStorage.setItem("savedFeeds", JSON.stringify([]));
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -16,8 +17,9 @@ function App() {
     let result = await extract('http://127.0.0.1:8080/' + feedUrl, {
       normalization: false
     })
-    console.log(result)
-    console.log(result.entry)
+    // console.log(result)
+    // console.log(result.entry)
+
     // sort feeds according to their published date
     result.entry = result.entry.sort(compare);
     setFeedData(result);
@@ -37,6 +39,7 @@ function App() {
       }
     }
   }, [feedData])
+  
 
   // sorting items according to published dates
   const compare = (a, b) => {
@@ -49,6 +52,14 @@ function App() {
     return 0;
   }
   
+  const addFeed = (feed) => {
+    console.log('in click')
+    let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
+    storedArray.push(feed)
+    localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
+    console.log(JSON.parse(localStorage.getItem("savedFeeds")))
+    // return true
+  }
 
   return (
     <div className="App">
@@ -86,6 +97,14 @@ function App() {
             <div className="content">id: {item.id}</div>
             <a className="content" href={item.link}>{item.link}</a>
             <div className="content">description: {item.content}</div>
+            <button className="add_btn" 
+              onClick={() => {
+                let successfullyAdded = addFeed(item)
+                // if(successfullyAdded){
+                //   this.disabled = true;
+                // }
+              }}
+              >Add</button>
           </li>
         ))}
       </ul>
