@@ -12,13 +12,13 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     // fetch and parse the feed here
-    const result = await extract('http://127.0.0.1:8080/' + feedUrl, {
+    let result = await extract('http://127.0.0.1:8080/' + feedUrl, {
       normalization: false
     })
     console.log(result)
     console.log(result.entry)
+    result.entry = result.entry.sort(compare);
     setFeedData(result);
-
   }
 
   // handling uloaded images with relative paths
@@ -30,6 +30,17 @@ function App() {
       }
     }
   }, [feedData])
+
+  // sorting items according to published dates
+  const compare = (a, b) => {
+    if ( a.published < b.published ){
+      return 1;
+    }
+    if ( a.published > b.published ){
+      return -1;
+    }
+    return 0;
+  }
   
 
   return (
