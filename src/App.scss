@@ -71,3 +71,27 @@ li {
   width: max-content;
   margin: 10px auto;
 }
+
+.info-container{
+  display: flex;
+  flex-direction: column;
+  .info-upper-container{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    .info-upper-left{
+      width: 80%;
+      p{
+        font-size: 1rem;
+        font-weight: bold;
+      }
+    }
+    img{
+      width: 100px;
+      height: 100px;
+    }
+    p{
+      font-size: 1rem;
+    }
+  }
+}
