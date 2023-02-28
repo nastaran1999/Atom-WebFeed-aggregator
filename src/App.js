@@ -11,12 +11,14 @@ function App() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFeedData(null)
     // fetch and parse the feed here
     let result = await extract('http://127.0.0.1:8080/' + feedUrl, {
       normalization: false
     })
     console.log(result)
     console.log(result.entry)
+    // sort feeds according to their published date
     result.entry = result.entry.sort(compare);
     setFeedData(result);
   }
@@ -24,9 +26,14 @@ function App() {
   // handling uloaded images with relative paths
   useEffect(() => {
     let imgElement = document.getElementsByTagName('img')[0]
-    if(imgElement){
+    if(imgElement && feedData){
       if(!imgElement.complete && imgElement.naturalHeight == 0){
-        imgElement.src = feedData.link + feedData.logo
+        if(!feedData.logo.includes('://')){
+          setFeedData(prevState => ({
+            ...prevState,
+            logo: prevState.link + prevState.logo
+          }));
+        }
       }
     }
   }, [feedData])
@@ -73,6 +80,7 @@ function App() {
       <ul>
         {feedData && feedData.entry.map((item, index) => (
           <li key={index}>
+            <img className='author_img' src={feedData.logo} />
             <div className="title">{item.title}</div>
             <div className="date">{item.published}</div>
             <div className="content">id: {item.id}</div>
