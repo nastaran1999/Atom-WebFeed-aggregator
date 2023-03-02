@@ -1,45 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import axios from 'axios';
-// import { parseString } from 'xml2js';
 import { extract } from '@extractus/feed-extractor'
 
 function App() {
   const [feedUrl, setFeedUrl] = useState('');
-  const [feedData, setFeedData] = useState(null);
+  const [feedData, setFeedData] = useState([]);
   const [error, setError] = useState(null);
   localStorage.setItem("savedFeeds", JSON.stringify([]));
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setFeedData(null)
     // fetch and parse the feed here
     let result = await extract('http://127.0.0.1:8080/' + feedUrl, {
       normalization: false
     })
-    // console.log(result)
-    // console.log(result.entry)
 
     // sort feeds according to their published date
     result.entry = result.entry.sort(compare);
-    setFeedData(result);
+    setFeedData([...feedData, {'entry' : result.entry,
+                              'info' : {'author' : result.author.name ,
+                              'id': result.id,
+                              'link': result.link,
+                              'title': result.title,
+                              // handling uloaded images with relative paths
+                              'logo': result.logo.includes('://') ? result.logo : result.link + result.logo,
+                              'subtitle': result.subtitle,
+                              'rights': result.rights,
+                              'updated': result.updated}
+                              }])
   }
-
-  // handling uloaded images with relative paths
-  useEffect(() => {
-    let imgElement = document.getElementsByTagName('img')[0]
-    if(imgElement && feedData){
-      if(!imgElement.complete && imgElement.naturalHeight == 0){
-        if(!feedData.logo.includes('://')){
-          setFeedData(prevState => ({
-            ...prevState,
-            logo: prevState.link + prevState.logo
-          }));
-        }
-      }
-    }
-  }, [feedData])
-  
 
   // sorting items according to published dates
   const compare = (a, b) => {
@@ -53,7 +43,6 @@ function App() {
   }
   
   const addFeed = (feed) => {
-    console.log('in click')
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
     storedArray.push(feed)
     localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
@@ -68,46 +57,48 @@ function App() {
         <button className='button' type="submit">Subscribe</button>
       </form>
       {error && <div className="error">{error.message}</div>}
-      {
-        feedData ? 
-        <div className='info-container'>
-          <div className='info-upper-container'>
-            <div className='info-upper-left'>
-              <p>author: {feedData.author.name}</p>
-              <p>id: {feedData.id}</p>
-              <p>link: {feedData.link}</p>
-              <p>title: {feedData.title}</p>
+         {feedData.length && feedData.map((feedDataItem, index) => { 
+          return(
+            <div className='info-container'>
+              <div className='info-upper-container'>
+                <div className='info-upper-left'>
+                  test
+                  <p>author: {feedDataItem.info.author}</p>
+                  <p>id: {feedDataItem.info.id}</p>
+                  <p>link: {feedDataItem.info.link}</p>
+                  <p>title: {feedDataItem.info.title}</p>
+                </div>
+                <img src={feedDataItem.info.logo} />
+              </div>
+              <p>subtitle: {feedDataItem.info.subtitle}</p>
+              <p>rights: {feedDataItem.info.rights}</p>
+              <p>updated: {feedDataItem.info.updated}</p>
+              <ul>
+              {
+                feedDataItem.entry.map((item, index) => (
+                  <li key={index}>
+                    <img className='author_img' src={feedDataItem.info.logo} />
+                    <div className="title">{item.title}</div>
+                    <div className="date">published: {item.published}</div>
+                    <div className="date">updated: {item.updated}</div>
+                    <div className="content">id: {item.id}</div>
+                    <a className="content" href={item.link}>{item.link}</a>
+                    <div className="content">description: {item.content}</div>
+                    <button className="add_btn" 
+                      onClick={() => {
+                        let successfullyAdded = addFeed(item)
+                        // if(successfullyAdded){
+                        //   this.disabled = true;
+                        // }
+                      }}
+                      >Add</button>
+                  </li>
+                ))
+              }
+              </ul>
             </div>
-            <img src={feedData.logo} />
-          </div>
-          <p>subtitle: {feedData.subtitle}</p>
-          <p>rights: {feedData.rights}</p>
-          <p>updated: {feedData.updated}</p>
-        </div>
-        :
-        null
-      }
-      
-      <ul>
-        {feedData && feedData.entry.map((item, index) => (
-          <li key={index}>
-            <img className='author_img' src={feedData.logo} />
-            <div className="title">{item.title}</div>
-            <div className="date">{item.published}</div>
-            <div className="content">id: {item.id}</div>
-            <a className="content" href={item.link}>{item.link}</a>
-            <div className="content">description: {item.content}</div>
-            <button className="add_btn" 
-              onClick={() => {
-                let successfullyAdded = addFeed(item)
-                // if(successfullyAdded){
-                //   this.disabled = true;
-                // }
-              }}
-              >Add</button>
-          </li>
-        ))}
-      </ul>
+          )
+        })} 
     </div>
   );
 }
