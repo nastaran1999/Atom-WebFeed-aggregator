@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './App.scss';
-import axios from 'axios';
 import { extract } from '@extractus/feed-extractor'
 
 function App() {
@@ -18,6 +17,7 @@ function App() {
 
     // sort feeds according to their published date
     result.entry = result.entry.sort(compare);
+    addAuthorInfo(result)
     setFeedData([...feedData, {'entry' : result.entry,
                               'info' : {'author' : result.author.name ,
                               'id': result.id,
@@ -47,7 +47,15 @@ function App() {
     storedArray.push(feed)
     localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
     console.log(JSON.parse(localStorage.getItem("savedFeeds")))
-    // return true
+    return true
+  }
+
+  const addAuthorInfo = (feeds) => {
+    for (let index = 0; index < feeds.entry.length; index++) {
+      feeds.entry[index].author = feeds.author.name;
+      feeds.entry[index].authorLink = feeds.link;
+    }
+    return feeds;
   }
 
   return (
@@ -60,36 +68,30 @@ function App() {
          {feedData.length && feedData.map((feedDataItem, index) => { 
           return(
             <div className='info-container'>
-              <div className='info-upper-container'>
-                <div className='info-upper-left'>
-                  test
-                  <p>author: {feedDataItem.info.author}</p>
-                  <p>id: {feedDataItem.info.id}</p>
-                  <p>link: {feedDataItem.info.link}</p>
-                  <p>title: {feedDataItem.info.title}</p>
-                </div>
-                <img src={feedDataItem.info.logo} />
-              </div>
-              <p>subtitle: {feedDataItem.info.subtitle}</p>
-              <p>rights: {feedDataItem.info.rights}</p>
-              <p>updated: {feedDataItem.info.updated}</p>
               <ul>
               {
                 feedDataItem.entry.map((item, index) => (
                   <li key={index}>
-                    <img className='author_img' src={feedDataItem.info.logo} />
-                    <div className="title">{item.title}</div>
-                    <div className="date">published: {item.published}</div>
-                    <div className="date">updated: {item.updated}</div>
-                    <div className="content">id: {item.id}</div>
-                    <a className="content" href={item.link}>{item.link}</a>
-                    <div className="content">description: {item.content}</div>
+                    <div className="author_container">
+                      <img className='author_img' src={feedDataItem.info.logo} />
+                      <div className='author_info_wrapper'>
+                        <p className='author_info_title'>{item.title}</p>
+                        <p className='author_info_name'>{item.author} - <a href={item.authorLink}>{item.authorLink}</a></p>
+                      </div>
+                    </div>
+                    <div className='content_container'>
+                      <div className="date">published: {item.published ? item.published : 'unavailable'}</div>
+                      <div className="date">updated: {item.updated}</div>
+                      <a className="date" href={item.link}>{item.link}</a>
+                      <div className="content">{item.content}</div>
+                    </div>
                     <button className="add_btn" 
+                      id={index + '_btn'}
                       onClick={() => {
                         let successfullyAdded = addFeed(item)
-                        // if(successfullyAdded){
-                        //   this.disabled = true;
-                        // }
+                        if(successfullyAdded){
+                          document.getElementById(index + '_btn').disabled = true
+                        }
                       }}
                       >Add</button>
                   </li>
