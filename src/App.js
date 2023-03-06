@@ -14,33 +14,49 @@ function App() {
     let result = await extract('http://127.0.0.1:8080/' + feedUrl, {
       normalization: false
     })
+    console.log(result)
+    if(result.entry){
+      console.log('atom')
+      // sort feeds according to their published date
+      result.entry = sortArrayOfObjects(result.entry, "published");
+      result = addAuthorInfo(result, 'atom')
+      setFeedData([...feedData, {'entry' : result.entry,
+                                'info' : 
+                                  {'author' : result.author.name ,
+                                  'id': result.id,
+                                  'link': result.link,
+                                  'title': result.title,
+                                  // handling uloaded images with relative paths
+                                  'logo': result.logo.includes('://') ? result.logo : result.link + result.logo,
+                                  'rights': result.rights}
+                                }])
+    }
+    else if(result.item){
+      console.log('rss')      // sort feeds according to their published date
+      result.item = sortArrayOfObjects(result.item, "pubDate");
+      result = addAuthorInfo(result, 'rss')
+      setFeedData([...feedData, {'entry' : result.item,
+                                'info' : 
+                                  {'author' : result['itunes:author'],
+                                  'link': result.link,
+                                  'title': result.title,
+                                  // handling uloaded images with relative paths
+                                  'logo': result['itunes:image']['url'] ? result['itunes:image']['url'] : result['itunes:image']['@_href'] ? result['itunes:image']['@_href'] : '',
+                                  'rights': result.copyright}
+                                }])
+    }
+    else if(result.items){
+      console.log('json')
+      result.items = sortArrayOfObjects(result.items, "date_published");
+    }
 
-    // sort feeds according to their published date
-    result.entry = result.entry.sort(compare);
-    addAuthorInfo(result)
-    setFeedData([...feedData, {'entry' : result.entry,
-                              'info' : {'author' : result.author.name ,
-                              'id': result.id,
-                              'link': result.link,
-                              'title': result.title,
-                              // handling uloaded images with relative paths
-                              'logo': result.logo.includes('://') ? result.logo : result.link + result.logo,
-                              'subtitle': result.subtitle,
-                              'rights': result.rights,
-                              'updated': result.updated}
-                              }])
   }
 
-  // sorting items according to published dates
-  const compare = (a, b) => {
-    if ( a.published < b.published ){
-      return 1;
-    }
-    if ( a.published > b.published ){
-      return -1;
-    }
-    return 0;
-  }
+  const sortArrayOfObjects = (arr, key) => {
+    return arr.sort((a, b) => {
+      return new Date(b[key]) - new Date(a[key]);
+    });
+  };
   
   const addFeed = (feed) => {
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
@@ -50,10 +66,24 @@ function App() {
     return true
   }
 
-  const addAuthorInfo = (feeds) => {
-    for (let index = 0; index < feeds.entry.length; index++) {
-      feeds.entry[index].author = feeds.author.name;
-      feeds.entry[index].authorLink = feeds.link;
+  const addAuthorInfo = (feeds, type) => {
+    if(type == 'atom'){
+      for (let index = 0; index < feeds.entry.length; index++) {
+        feeds.entry[index].author = feeds.author.name;
+        feeds.entry[index].authorLink = feeds.link;
+      }
+    }
+    else if(type == 'rss'){
+      for (let index = 0; index < feeds.item.length; index++) {
+        feeds.item[index].author = feeds['itunes:owner']['itunes:name'];
+        feeds.item[index].authorLink = feeds['itunes:owner']['itunes:email'];
+      }
+    }
+    else if(type == 'json'){
+      for (let index = 0; index < feeds.items.length; index++) {
+        feeds.items[index].author = feeds.author.name;
+        feeds.items[index].authorLink = feeds.home_page_url;
+      }
     }
     return feeds;
   }
@@ -68,7 +98,7 @@ function App() {
          {feedData.length && feedData.map((feedDataItem, index) => { 
           return(
             <div className='info-container'>
-              <ul>
+              <ul key={index}>
               {
                 feedDataItem.entry.map((item, index) => (
                   <li key={index}>
@@ -80,10 +110,10 @@ function App() {
                       </div>
                     </div>
                     <div className='content_container'>
-                      <div className="date">published: {item.published ? item.published : 'unavailable'}</div>
-                      <div className="date">updated: {item.updated}</div>
+                      <div className="date">published: {item.published ? item.published : item.pubDate ? item.pubDate : 'unavailable'}</div>
+                      <div className="date">updated: {item.updated ? item.updated : 'unavailable'}</div>
                       <a className="date" href={item.link}>{item.link}</a>
-                      <div className="content">{item.content}</div>
+                      <div className="content">{item.content ? item.content : item.description ? item.description : ''}</div>
                     </div>
                     <button className="add_btn" 
                       id={index + '_btn'}
