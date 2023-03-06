@@ -1,3 +1,4 @@
+// new date doesn't work
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import { extract } from '@extractus/feed-extractor'
@@ -15,48 +16,46 @@ function App() {
       normalization: false
     })
     console.log(result)
+    let concatFeeds = null;
     if(result.entry){
       console.log('atom')
       // sort feeds according to their published date
-      result.entry = sortArrayOfObjects(result.entry, "published");
+      // result.entry = sortArrayOfObjects(result.entry, "published");
       result = addAuthorInfo(result, 'atom')
-      setFeedData([...feedData, {'entry' : result.entry,
-                                'info' : 
-                                  {'author' : result.author.name ,
-                                  'id': result.id,
-                                  'link': result.link,
-                                  'title': result.title,
-                                  // handling uloaded images with relative paths
-                                  'logo': result.logo.includes('://') ? result.logo : result.link + result.logo,
-                                  'rights': result.rights}
-                                }])
+      concatFeeds = feedData.concat(result.entry);
     }
     else if(result.item){
       console.log('rss')      // sort feeds according to their published date
-      result.item = sortArrayOfObjects(result.item, "pubDate");
       result = addAuthorInfo(result, 'rss')
-      setFeedData([...feedData, {'entry' : result.item,
-                                'info' : 
-                                  {'author' : result['itunes:author'],
-                                  'link': result.link,
-                                  'title': result.title,
-                                  // handling uloaded images with relative paths
-                                  'logo': result['itunes:image']['url'] ? result['itunes:image']['url'] : result['itunes:image']['@_href'] ? result['itunes:image']['@_href'] : '',
-                                  'rights': result.copyright}
-                                }])
+      changeFieldNameOfArray('pubDate', 'published', result.item)
+      concatFeeds = feedData.concat(result.item);
     }
     else if(result.items){
       console.log('json')
-      result.items = sortArrayOfObjects(result.items, "date_published");
     }
-
+    concatFeeds = sortAccordingToDate(concatFeeds);
+    setFeedData(concatFeeds)
   }
 
-  const sortArrayOfObjects = (arr, key) => {
-    return arr.sort((a, b) => {
-      return new Date(b[key]) - new Date(a[key]);
-    });
-  };
+  // setting identical field names for all types of feeds
+  const changeFieldNameOfArray = (old_key, new_key, array) => {
+    for (let index = 0; index < array.length; index++) {
+      if (old_key !== new_key) {
+        Object.defineProperty(array[index], new_key,
+            Object.getOwnPropertyDescriptor(array[index], old_key));
+        delete array[index][old_key];
+      }
+    }
+  }
+
+  const sortAccordingToDate = (arr) => {
+    arr.sort((a, b) => {
+      const dateA = new Date(Date.parse(a.published));
+      const dateB = new Date(Date.parse(b.published));
+      return dateB - dateA;
+    })
+    return arr;
+  }
   
   const addFeed = (feed) => {
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
@@ -71,12 +70,14 @@ function App() {
       for (let index = 0; index < feeds.entry.length; index++) {
         feeds.entry[index].author = feeds.author.name;
         feeds.entry[index].authorLink = feeds.link;
+        feeds.entry[index].logo = feeds.logo.includes('://') ? feeds.logo : feeds.link + feeds.logo
       }
     }
     else if(type == 'rss'){
       for (let index = 0; index < feeds.item.length; index++) {
         feeds.item[index].author = feeds['itunes:owner']['itunes:name'];
         feeds.item[index].authorLink = feeds['itunes:owner']['itunes:email'];
+        feeds.item[index].logo = feeds['itunes:image']['url'] ? feeds['itunes:image']['url'] : feeds['itunes:image']['@_href'] ? feeds['itunes:image']['@_href'] : '';
       }
     }
     else if(type == 'json'){
@@ -95,15 +96,13 @@ function App() {
         <button className='button' type="submit">Subscribe</button>
       </form>
       {error && <div className="error">{error.message}</div>}
-         {feedData.length && feedData.map((feedDataItem, index) => { 
-          return(
             <div className='info-container'>
-              <ul key={index}>
+              <ul>
               {
-                feedDataItem.entry.map((item, index) => (
+                feedData.length && feedData.map((item, index) => (
                   <li key={index}>
                     <div className="author_container">
-                      <img className='author_img' src={feedDataItem.info.logo} />
+                      <img className='author_img' src={item.logo} />
                       <div className='author_info_wrapper'>
                         <p className='author_info_title'>{item.title}</p>
                         <p className='author_info_name'>{item.author} - <a href={item.authorLink}>{item.authorLink}</a></p>
@@ -129,8 +128,6 @@ function App() {
               }
               </ul>
             </div>
-          )
-        })} 
     </div>
   );
 }
