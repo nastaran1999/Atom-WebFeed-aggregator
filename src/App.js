@@ -19,13 +19,15 @@ function App() {
     let concatFeeds = null;
     if(result.entry){
       console.log('atom')
-      // sort feeds according to their published date
-      // result.entry = sortArrayOfObjects(result.entry, "published");
       result = addAuthorInfo(result, 'atom')
+      // handling feeds without published date (only updated date)
+      if(!result.entry[0].published){
+        changeFieldNameOfArray('updated', 'published', result.entry)
+      }
       concatFeeds = feedData.concat(result.entry);
     }
     else if(result.item){
-      console.log('rss')      // sort feeds according to their published date
+      console.log('rss')      
       result = addAuthorInfo(result, 'rss')
       changeFieldNameOfArray('pubDate', 'published', result.item)
       concatFeeds = feedData.concat(result.item);
@@ -89,6 +91,24 @@ function App() {
     return feeds;
   }
 
+  const contentHandler = (item) => {
+    if(item.content){
+      if(item.content.startsWith('<')){
+        console.log('content_container')
+        return (<div dangerouslySetInnerHTML={{__html: item.content}} />)
+      }else{
+        return item.content
+      }
+    }
+    else if(item.description){
+      if(item.description.startsWith('<')){
+        return (<div dangerouslySetInnerHTML={{__html: item.description}} />)
+      }else{
+        return item.description
+      }
+    }
+  }
+
   return (
     <div className="App">
       <form onSubmit={handleSubmit} className="form">
@@ -109,10 +129,9 @@ function App() {
                       </div>
                     </div>
                     <div className='content_container'>
-                      <div className="date">published: {item.published ? item.published : item.pubDate ? item.pubDate : 'unavailable'}</div>
-                      <div className="date">updated: {item.updated ? item.updated : 'unavailable'}</div>
+                      <div className="date">{item.published ? item.published : 'unavailable'}</div>
                       <a className="date" href={item.link}>{item.link}</a>
-                      <div className="content">{item.content ? item.content : item.description ? item.description : ''}</div>
+                      <div className="content">{contentHandler(item)}</div>
                     </div>
                     <button className="add_btn" 
                       id={index + '_btn'}
