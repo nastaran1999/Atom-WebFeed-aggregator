@@ -93,19 +93,16 @@ function App() {
 
   const contentHandler = (item) => {
     if(item.content){
-      if(item.content.startsWith('<')){
-        console.log('content_container')
-        return (<div dangerouslySetInnerHTML={{__html: item.content}} />)
-      }else{
-        return item.content
+      if(item.content.includes('\n')){
+        item.content = item.content.replaceAll('\n', '<br>')
       }
+      return (<div dangerouslySetInnerHTML={{__html: item.content}} />)
     }
     else if(item.description){
-      if(item.description.startsWith('<')){
-        return (<div dangerouslySetInnerHTML={{__html: item.description}} />)
-      }else{
-        return item.description
+      if(item.content.includes('\n')){
+        item.content = item.content.replaceAll('\n', '<br>')
       }
+      return (<div dangerouslySetInnerHTML={{__html: item.description}} />)
     }
   }
 
