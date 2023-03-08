@@ -1,4 +1,3 @@
-// new date doesn't work
 import React, { useState, useEffect } from 'react';
 import './App.scss';
 import { extract } from '@extractus/feed-extractor'
@@ -34,6 +33,12 @@ function App() {
     }
     else if(result.items){
       console.log('json')
+      result = addAuthorInfo(result, 'json')
+      // normalizing json fields
+      changeFieldNameOfArray('date_published', 'published', result.items)
+      changeFieldNameOfArray('content_html', 'content', result.items)
+      changeFieldNameOfArray('url', 'link', result.items)
+      concatFeeds = feedData.concat(result.items);
     }
     concatFeeds = sortAccordingToDate(concatFeeds);
     setFeedData(concatFeeds)
@@ -86,6 +91,7 @@ function App() {
       for (let index = 0; index < feeds.items.length; index++) {
         feeds.items[index].author = feeds.author.name;
         feeds.items[index].authorLink = feeds.home_page_url;
+        feeds.items[index].logo = '';
       }
     }
     return feeds;
