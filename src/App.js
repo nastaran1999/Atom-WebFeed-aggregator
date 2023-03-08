@@ -99,8 +99,8 @@ function App() {
       return (<div dangerouslySetInnerHTML={{__html: item.content}} />)
     }
     else if(item.description){
-      if(item.content.includes('\n')){
-        item.content = item.content.replaceAll('\n', '<br>')
+      if(item.description.includes('\n')){
+        item.description = item.description.replaceAll('\n', '<br>')
       }
       return (<div dangerouslySetInnerHTML={{__html: item.description}} />)
     }
