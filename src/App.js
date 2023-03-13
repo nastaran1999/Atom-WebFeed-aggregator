@@ -88,11 +88,15 @@ function App() {
   // setting identical field names for all types of feeds
   const changeFieldNameOfArray = (old_key, new_key, array) => {
     for (let index = 0; index < array.length; index++) {
-      if (old_key !== new_key) {
-        Object.defineProperty(array[index], new_key,
-            Object.getOwnPropertyDescriptor(array[index], old_key));
-        delete array[index][old_key];
-      }
+      changeFieldNameofObject(array[index], old_key, new_key)
+    }
+  }
+
+  const changeFieldNameofObject = (obj, old_key, new_key) => {
+    if (old_key !== new_key) {
+      Object.defineProperty(obj, new_key,
+          Object.getOwnPropertyDescriptor(obj, old_key));
+      delete obj[old_key];
     }
   }
 
@@ -118,21 +122,40 @@ function App() {
       for (let index = 0; index < feeds.entry.length; index++) {
         feeds.entry[index].author = feeds.author.name;
         feeds.entry[index].authorLink = feeds.link;
-        feeds.entry[index].logo = feeds.logo.includes('://') ? feeds.logo : feeds.link + feeds.logo
+        if(feeds.logo){
+          feeds.entry[index].logo = feeds.logo.includes('://') ? feeds.logo : feeds.link + feeds.logo
+        }else if(feeds.icon){
+          feeds.entry[index].logo = feeds.icon.includes('://') ? feeds.icon : feeds.link + feeds.icon
+        }else{
+          feeds.logo = ''
+        }
       }
     }
     else if(type == 'rss'){
       for (let index = 0; index < feeds.item.length; index++) {
         feeds.item[index].author = feeds['itunes:owner']['itunes:name'];
         feeds.item[index].authorLink = feeds['itunes:owner']['itunes:email'];
-        feeds.item[index].logo = feeds['itunes:image']['url'] ? feeds['itunes:image']['url'] : feeds['itunes:image']['@_href'] ? feeds['itunes:image']['@_href'] : '';
+        if(feeds['itunes:image']){
+          feeds.item[index].logo = feeds['itunes:image']['url'] ? feeds['itunes:image']['url'] : feeds['itunes:image']['@_href'] ? feeds['itunes:image']['@_href'] : '';
+        }else if(feeds['media:thumbnail']){
+          feeds.item[index].logo = feeds['media:thumbnail']['url'] ? feeds['media:thumbnail']['url'] : feeds['media:thumbnail']['@_href'] ? feeds['media:thumbnail']['@_href'] : '';
+        }else if(feeds['media:content']){
+          feeds.item[index].logo = feeds['media:content']['url'] ? feeds['media:content']['url'] : feeds['media:content']['@_href'] ? feeds['media:content']['@_href'] : '';
+        }
       }
     }
     else if(type == 'json'){
       for (let index = 0; index < feeds.items.length; index++) {
         feeds.items[index].author = feeds.author.name;
         feeds.items[index].authorLink = feeds.home_page_url;
-        feeds.items[index].logo = '';
+        if(feeds.items[index].image){
+          feeds.items[index].logo = feeds.items[index].image;
+        }else if(feeds.items[index].icon){
+          feeds.items[index].logo = feeds.items[index].icon;
+        }
+        else{
+          feeds.items[index].logo = '';
+        }
       }
     }
     return feeds;
@@ -163,7 +186,7 @@ function App() {
       <div className='info-container'>
         <ul>
         {
-          feedData.length && feedData.slice(startIndex, endIndex).map((item, index) => (
+          feedData.length ? feedData.slice(startIndex, endIndex).map((item, index) => (
             <li key={index}>
               <div className="author_container">
                 <img className='author_img' src={item.logo} />
@@ -187,31 +210,35 @@ function App() {
                 }}
                 >Add</button>
             </li>
-          ))
+          )) : null
         }
         </ul>
-        <div>
-          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} >
-            First
-          </button>
-          <button onClick={() => setCurrentPage(prevPage => prevPage - 1)} disabled={currentPage === 1}>
-            Previous
-          </button>
-          {pageNumbers.map(pageNumber => (
-            <button
-              key={pageNumber}
-              onClick={() => setCurrentPage(pageNumber)}
-              disabled={currentPage === pageNumber}>
-              {pageNumber}
-            </button>
-          ))}
-          <button onClick={() => setCurrentPage(prevPage => prevPage + 1)} disabled={currentPage === totalPages}>
-            Next
-          </button>
-          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-            Last
-          </button>
-        </div>
+        {
+          feedData.length ? 
+            <div>
+              <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} >
+                First
+              </button>
+              <button onClick={() => setCurrentPage(prevPage => prevPage - 1)} disabled={currentPage === 1}>
+                Previous
+              </button>
+              {pageNumbers.map(pageNumber => (
+                <button
+                  key={pageNumber}
+                  onClick={() => setCurrentPage(pageNumber)}
+                  disabled={currentPage === pageNumber}>
+                  {pageNumber}
+                </button>
+              ))}
+              <button onClick={() => setCurrentPage(prevPage => prevPage + 1)} disabled={currentPage === totalPages}>
+                Next
+              </button>
+              <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                Last
+              </button>
+            </div>
+          : null
+        }
       </div>
     </div>
   );
