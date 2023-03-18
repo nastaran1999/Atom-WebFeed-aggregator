@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './styles.scss';
 import { extract } from '@extractus/feed-extractor'
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-// import SavedFeeds from './SavedFeeds'
 
 const PAGE_SIZE = 10; // number of items to show per page
 const PAGE_RANGE = 5; // number of page buttons to show in the range
@@ -11,9 +10,22 @@ function AllFeeds() {
   const [feedUrl, setFeedUrl] = useState('');
   const [feedData, setFeedData] = useState([]);
   const [error, setError] = useState(null);
-  localStorage.setItem("savedFeeds", JSON.stringify([]));
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFeeds, setSelectedFeeds] = useState([])
 
+  useEffect(() => {
+    // fetching selected feeds from local storage -> in order to show navigation buttons (download and view btns)
+    let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
+    if(storedArray){
+        setSelectedFeeds(storedArray)
+    }
+    // fetching previously fetched items
+    let storedArray2 = JSON.parse(localStorage.getItem("fetchedFeeds"));
+    if(storedArray2){
+        setFeedData(storedArray2)
+    }
+  }, [])
+  
   const handleSubmit = async (event) => {
     event.preventDefault();
     // fetch and parse the feed here
@@ -48,6 +60,8 @@ function AllFeeds() {
     }
     concatFeeds = sortAccordingToDate(concatFeeds);
     setFeedData(concatFeeds)
+    // updating local storage and saving newly fetched feeds
+    localStorage.setItem("fetchedFeeds", JSON.stringify(concatFeeds));
   }
 
   // calculate the total number of pages
@@ -112,10 +126,14 @@ function AllFeeds() {
   }
   
   const addFeed = (feed) => {
+    setSelectedFeeds([...selectedFeeds,feed]);
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
+    if(storedArray == null){
+        storedArray = []
+    }
     storedArray.push(feed)
+    setSelectedFeeds(storedArray);
     localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
-    console.log(JSON.parse(localStorage.getItem("savedFeeds")))
     return true
   }
 
@@ -179,9 +197,8 @@ function AllFeeds() {
   }
 
   const download = () => {
-    let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
     // Convert the array of objects to a JSON string
-    let jsonString = JSON.stringify(storedArray);
+    let jsonString = JSON.stringify(selectedFeeds);
 
     // Create a downloadable file using the Blob object
     const blob = new Blob([jsonString], { type: 'application/json' });
@@ -193,13 +210,36 @@ function AllFeeds() {
     link.click();
   }
 
+  const deleteFetchedFeeds = () => {
+    console.log('deleteFetchedFeeds')
+    localStorage.setItem("fetchedFeeds", JSON.stringify([]));
+  }
+
+  const deleteSavedFeeds = () => {
+    localStorage.setItem("savedFeeds", JSON.stringify([]));
+  }
+
   return (
       <div className="App">
-        <form onSubmit={handleSubmit} className="form">
+        <form className="form">
           <input className='input' type="text" placeholder="Enter feed URL" value={feedUrl} onChange={(event) => setFeedUrl(event.target.value)} />
-          <button className='button' type="submit">Subscribe</button>
-          <button className='button download_btn' type="submit" onClick={download}>Download</button>
-          <Link to="/savedFeeds">View saved feeds</Link>
+          <button className='button' onClick={handleSubmit}>Subscribe</button>
+          {
+            selectedFeeds.length > 0 ? 
+            <div className='btn_container'>
+              <button className='button download_btn' onClick={download}>Download</button>
+              <Link to="/savedFeeds">
+                <button className='button navigate_btn'>
+                    View saved feeds
+                </button>
+              </Link>
+              <button className='button delete_btn' onClick={deleteFetchedFeeds}>Delete Fetched Feeds</button>
+              <button className='button delete_btn' onClick={deleteSavedFeeds}>Delete Saved Feeds</button>
+            </div>
+            : null
+          }
+          
+             
         </form>
         {error && <div className="error">{error.message}</div>}
         <div className='info-container'>

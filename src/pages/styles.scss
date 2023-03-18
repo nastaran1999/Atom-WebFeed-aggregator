@@ -14,7 +14,7 @@ input[type="text"] {
   font-size: medium;
 }
 
-button[type="submit"] {
+button{
   color: white;
   border: none;
   cursor: pointer;
@@ -166,6 +166,31 @@ li{
   }
 }
 
-.download_btn{
-  background-color: #009cff !important;
+.btn_container{
+  display: flex;
+  flex-direction: row;
+
+  .download_btn{
+    background-color: #009cff !important;
+    margin: auto;
+    margin-right: 2px;
+    margin-left: 2px;
+  }
+
+  .delete_btn{
+    background-color: #ff2a00 !important;
+    margin: auto;
+    margin-right: 2px;
+    margin-left: 2px;
+  }
+
+  a{
+    margin: auto;
+    margin-left: 2px;
+    margin-right: 2px;
+    .navigate_btn{
+      background-color: #ff8c00 !important;
+    }
+  }
+
 }

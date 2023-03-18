@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './styles.scss';
+import {useLocation} from 'react-router-dom';
 
 const PAGE_SIZE = 10; // number of items to show per page
 const PAGE_RANGE = 5; // number of page buttons to show in the range
@@ -9,7 +10,9 @@ function SavedFeeds() {
 
   useEffect(() => {
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
-    setFeedData(storedArray);
+    if(storedArray){
+      setFeedData(storedArray)
+    }
   }, [])
   
   const [currentPage, setCurrentPage] = useState(1);
