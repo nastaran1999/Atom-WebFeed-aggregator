@@ -59,7 +59,15 @@ function AllFeeds() {
       concatFeeds = feedData.concat(result.items);
     }
     concatFeeds = sortAccordingToDate(concatFeeds);
-    setFeedData(concatFeeds)
+
+    // Filter out duplicates
+    const uniqueResults = Array.from(new Set(concatFeeds.map(result => result.id)))
+                                        .map(id => {
+                                        return concatFeeds.find(result => result.id === id);
+                                    });
+
+    setFeedData(uniqueResults);
+
     // updating local storage and saving newly fetched feeds
     localStorage.setItem("fetchedFeeds", JSON.stringify(concatFeeds));
   }
