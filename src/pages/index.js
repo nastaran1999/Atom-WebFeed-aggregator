@@ -69,7 +69,7 @@ function AllFeeds() {
     setFeedData(uniqueResults);
 
     // updating local storage and saving newly fetched feeds
-    localStorage.setItem("fetchedFeeds", JSON.stringify(concatFeeds));
+    localStorage.setItem("fetchedFeeds", JSON.stringify(uniqueResults));
   }
 
   // calculate the total number of pages
@@ -148,7 +148,7 @@ function AllFeeds() {
   const addAuthorInfo = (feeds, type) => {
     if(type == 'atom'){
       for (let index = 0; index < feeds.entry.length; index++) {
-        feeds.entry[index].author = feeds.author.name;
+        feeds.entry[index].author = feeds.author ? feeds.author.name : '';
         feeds.entry[index].authorLink = feeds.link;
         if(feeds.logo){
           feeds.entry[index].logo = feeds.logo.includes('://') ? feeds.logo : feeds.link + feeds.logo
@@ -161,8 +161,8 @@ function AllFeeds() {
     }
     else if(type == 'rss'){
       for (let index = 0; index < feeds.item.length; index++) {
-        feeds.item[index].author = feeds['itunes:owner']['itunes:name'];
-        feeds.item[index].authorLink = feeds['itunes:owner']['itunes:email'];
+        feeds.item[index].author = feeds['itunes:owner'] ? feeds['itunes:owner']['itunes:name'] : '';
+        feeds.item[index].authorLink = feeds['itunes:owner'] ? feeds['itunes:owner']['itunes:email'] : '';
         if(feeds['itunes:image']){
           feeds.item[index].logo = feeds['itunes:image']['url'] ? feeds['itunes:image']['url'] : feeds['itunes:image']['@_href'] ? feeds['itunes:image']['@_href'] : '';
         }else if(feeds['media:thumbnail']){
