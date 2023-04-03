@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './styles.scss';
 import {useLocation} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 const PAGE_SIZE = 10; // number of items to show per page
 const PAGE_RANGE = 5; // number of page buttons to show in the range
@@ -134,6 +135,11 @@ function SavedFeeds() {
             </div>
           : null
         }
+        <Link to="/">
+          <button className='button navigate_btn'>
+              Back
+          </button>
+        </Link>
       </div>
     </div>
   );

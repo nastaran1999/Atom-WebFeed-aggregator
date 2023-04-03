@@ -61,13 +61,13 @@ function AllFeeds() {
     concatFeeds = sortAccordingToDate(concatFeeds);
 
     // Filter out duplicates
-    const uniqueResults = Array.from(new Set(concatFeeds.map(result => result.id)))
+    let uniqueResults = Array.from(new Set(concatFeeds.map(result => result.id)))
                                         .map(id => {
                                         return concatFeeds.find(result => result.id === id);
                                     });
-
+    // adding bookmarked status for newly fetched items 
+    uniqueResults = addBookMarkedStatus(uniqueResults)                                
     setFeedData(uniqueResults);
-
     // updating local storage and saving newly fetched feeds
     localStorage.setItem("fetchedFeeds", JSON.stringify(uniqueResults));
   }
@@ -109,6 +109,15 @@ function AllFeeds() {
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const endIndex = startIndex + PAGE_SIZE;
 
+  const addBookMarkedStatus = (array) => {
+    for (let index = 0; index < array.length; index++) {
+        if(!array[index].bookmarked){
+            array[index].bookmarked = false;
+        }
+    }
+    return array;
+  }
+
   // setting identical field names for all types of feeds
   const changeFieldNameOfArray = (old_key, new_key, array) => {
     for (let index = 0; index < array.length; index++) {
@@ -134,7 +143,9 @@ function AllFeeds() {
   }
   
   const addFeed = (feed) => {
+    // adding the feed to selected feed array
     setSelectedFeeds([...selectedFeeds,feed]);
+    // storing the selected feed in local storage
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
     if(storedArray == null){
         storedArray = []
@@ -142,7 +153,9 @@ function AllFeeds() {
     storedArray.push(feed)
     setSelectedFeeds(storedArray);
     localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
-    return true
+    // changing bookmarked status of the item in order to disable the button after refresh
+    feed.bookmarked = true
+    localStorage.setItem("fetchedFeeds", JSON.stringify(feedData));
   }
 
   const addAuthorInfo = (feeds, type) => {
@@ -238,11 +251,11 @@ function AllFeeds() {
               <button className='button download_btn' onClick={download}>Download</button>
               <Link to="/savedFeeds">
                 <button className='button navigate_btn'>
-                    View saved feeds
+                    View Bookmarked Feeds
                 </button>
               </Link>
               <button className='button delete_btn' onClick={deleteFetchedFeeds}>Delete Fetched Feeds</button>
-              <button className='button delete_btn' onClick={deleteSavedFeeds}>Delete Saved Feeds</button>
+              <button className='button delete_btn' onClick={deleteSavedFeeds}>Delete Bookmarked Feeds</button>
             </div>
             : null
           }
@@ -269,13 +282,11 @@ function AllFeeds() {
                 </div>
                 <button className="add_btn" 
                   id={index + '_btn'}
+                  disabled={item.bookmarked}
                   onClick={() => {
-                    let successfullyAdded = addFeed(item)
-                    if(successfullyAdded){
-                      document.getElementById(index + '_btn').disabled = true
-                    }
+                    addFeed(item)
                   }}
-                  >Add</button>
+                  >Bookmark</button>
               </li>
             )) : null
           }
