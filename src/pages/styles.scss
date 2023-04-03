@@ -194,3 +194,35 @@ li{
   }
 
 }
+
+
+.bookmark-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.bookmark-button input[type="text"] {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 8px;
+  flex-grow: 1;
+  margin-left: 5px;
+}
+
+.bookmark-button button {
+  padding: 8px 16px;
+  background-color: #0077cc;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.bookmark-button button:hover {
+  background-color: #0066b3;
+}

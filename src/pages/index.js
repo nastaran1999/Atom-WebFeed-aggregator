@@ -3,6 +3,11 @@ import './styles.scss';
 import { extract } from '@extractus/feed-extractor'
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
+// check tag format and save it like an array
+// add filter by tag
+// fix pagination button styles
+// fewer feedData loop -> newFeedData
+
 const PAGE_SIZE = 10; // number of items to show per page
 const PAGE_RANGE = 5; // number of page buttons to show in the range
 
@@ -12,6 +17,7 @@ function AllFeeds() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFeeds, setSelectedFeeds] = useState([])
+  const [tag, setTag] = useState('');
 
   useEffect(() => {
     // fetching selected feeds from local storage -> in order to show navigation buttons (download and view btns)
@@ -113,6 +119,7 @@ function AllFeeds() {
     for (let index = 0; index < array.length; index++) {
         if(!array[index].bookmarked){
             array[index].bookmarked = false;
+            array[index].tags = '';
         }
     }
     return array;
@@ -144,6 +151,8 @@ function AllFeeds() {
   
   const addFeed = (feed) => {
     // adding the feed to selected feed array
+    // adding selected tags to the item
+    feed.tags = tag;
     setSelectedFeeds([...selectedFeeds,feed]);
     // storing the selected feed in local storage
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
@@ -155,7 +164,16 @@ function AllFeeds() {
     localStorage.setItem("savedFeeds", JSON.stringify(storedArray));
     // changing bookmarked status of the item in order to disable the button after refresh
     feed.bookmarked = true
+    // let newFeedData = feedData;
+    // for (let index = 0; index < newFeedData.length; index++) {
+    //     if(newFeedData[index].id == feed.id){
+    //         newFeedData[index].bookmarked = true;
+    //         newFeedData[index].tags = tag;
+    //     }
+    // }
     localStorage.setItem("fetchedFeeds", JSON.stringify(feedData));
+    setTag('');
+
   }
 
   const addAuthorInfo = (feeds, type) => {
@@ -237,8 +255,18 @@ function AllFeeds() {
   }
 
   const deleteSavedFeeds = () => {
+    let newFeedData = feedData;
+    for (let index = 0; index < newFeedData.length; index++) {
+        newFeedData[index].bookmarked = false;
+    }
     localStorage.setItem("savedFeeds", JSON.stringify([]));
+    localStorage.setItem("fetchedFeeds", JSON.stringify(newFeedData));
+    setFeedData(newFeedData)
   }
+  
+  const handleTagsChange = (event) => {
+    setTag(event.target.value)
+  };
 
   return (
       <div className="App">
@@ -280,13 +308,29 @@ function AllFeeds() {
                   <a className="date" href={item.link}>{item.link}</a>
                   <div className="content">{contentHandler(item)}</div>
                 </div>
-                <button className="add_btn" 
-                  id={index + '_btn'}
-                  disabled={item.bookmarked}
-                  onClick={() => {
-                    addFeed(item)
-                  }}
-                  >Bookmark</button>
+                <div className='bookmark-button'>
+                    <input id={index + '_input'}
+                           type="text" 
+                           value={item.tags ? item.tags : tag} 
+                           onChange={handleTagsChange} 
+                           placeholder="Add tags for example Apple, Banana, ..."
+                           disabled={item.tags}
+                           style={{ display: item.tags ? 'unset' : 'none' }} />
+                    <button className="add_btn" 
+                        id={index + '_btn'}
+                        disabled={item.bookmarked}
+                        onClick={() => {
+                            let buttonText = document.getElementById(index + '_btn').innerText
+                            if(buttonText == 'Save'){
+                                addFeed(item)
+                            }else{
+                                document.getElementById(index + '_btn').innerText = 'Save'
+                                document.getElementById(index + '_input').style.display = 'unset'
+                            }
+                        }}
+                    >Bookmark</button>
+                    
+                </div>
               </li>
             )) : null
           }

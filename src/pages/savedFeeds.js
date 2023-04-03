@@ -104,6 +104,7 @@ function SavedFeeds() {
                 <div className="date">{item.published ? item.published : 'unavailable'}</div>
                 <a className="date" href={item.link}>{item.link}</a>
                 <div className="content">{contentHandler(item)}</div>
+                <div className="content">tags: {item.tags ? item.tags : ''}</div>
               </div>
             </li>
           )) : null
