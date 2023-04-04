@@ -152,7 +152,7 @@ function AllFeeds() {
   const addFeed = (feed) => {
     // adding the feed to selected feed array
     // adding selected tags to the item
-    feed.tags = tag;
+    feed.tags = tag.split(',');
     setSelectedFeeds([...selectedFeeds,feed]);
     // storing the selected feed in local storage
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
@@ -258,6 +258,7 @@ function AllFeeds() {
     let newFeedData = feedData;
     for (let index = 0; index < newFeedData.length; index++) {
         newFeedData[index].bookmarked = false;
+        newFeedData[index].tags = '';
     }
     localStorage.setItem("savedFeeds", JSON.stringify([]));
     localStorage.setItem("fetchedFeeds", JSON.stringify(newFeedData));
@@ -315,14 +316,30 @@ function AllFeeds() {
                            onChange={handleTagsChange} 
                            placeholder="Add tags for example Apple, Banana, ..."
                            disabled={item.tags}
-                           style={{ display: item.tags ? 'unset' : 'none' }} />
+                    />
+                    <div style={{ display: item.tags ? 'flex' : 'none' }}
+                         className='tag_container'
+                    >
+                        { Array.isArray(item.tags) ?
+                            item.tags.map((tag, index) => {
+                                return (
+                                    <div className="tag"
+                                         key={index}
+                                    >
+                                        {tag}
+                                    </div>)
+                            })
+                            : null
+                        }
+                    </div>
                     <button className="add_btn" 
                         id={index + '_btn'}
                         disabled={item.bookmarked}
                         onClick={() => {
                             let buttonText = document.getElementById(index + '_btn').innerText
                             if(buttonText == 'Save'){
-                                addFeed(item)
+                                addFeed(item);
+                                document.getElementById(index + '_input').style.display = 'none'
                             }else{
                                 document.getElementById(index + '_btn').innerText = 'Save'
                                 document.getElementById(index + '_input').style.display = 'unset'

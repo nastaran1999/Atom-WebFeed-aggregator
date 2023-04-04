@@ -104,7 +104,21 @@ function SavedFeeds() {
                 <div className="date">{item.published ? item.published : 'unavailable'}</div>
                 <a className="date" href={item.link}>{item.link}</a>
                 <div className="content">{contentHandler(item)}</div>
-                <div className="content">tags: {item.tags ? item.tags : ''}</div>
+                <div style={{ display: item.tags ? 'flex' : 'none' }}
+                  className='tag_container'
+                >
+                  { Array.isArray(item.tags) ?
+                    item.tags.map((tag, index) => {
+                      return (
+                        <div className="tag"
+                             key={index}
+                        >
+                          {tag}
+                        </div>)
+                      })
+                    : null
+                  }
+                  </div>
               </div>
             </li>
           )) : null
