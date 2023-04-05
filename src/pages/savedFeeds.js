@@ -8,6 +8,7 @@ const PAGE_RANGE = 5; // number of page buttons to show in the range
 
 function SavedFeeds() {
   const [feedData, setFeedData] = useState([]);
+  const [filterTerm, setFilterTerm] = useState([]);
 
   useEffect(() => {
     let storedArray = JSON.parse(localStorage.getItem("savedFeeds"));
@@ -15,11 +16,14 @@ function SavedFeeds() {
       setFeedData(storedArray)
     }
   }, [])
+
+  // filtering feeds according to user input
+  const filteredItems = feedData.filter(item => item.tags.toString().includes(filterTerm));
   
   const [currentPage, setCurrentPage] = useState(1);
 
   // calculate the total number of pages
-  const totalPages = Math.ceil(feedData.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredItems.length ? filteredItems.length / PAGE_SIZE : feedData.length / PAGE_SIZE);
 
   // calculate the range of page numbers to display
   let pageRangeStart = Math.max(1, currentPage - PAGE_RANGE);
@@ -85,43 +89,66 @@ function SavedFeeds() {
     }
   }
 
+  const renderFeeds = (items) => {
+    return (
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>
+            <div className="author_container">
+              <img className='author_img' src={item.logo} />
+              <div className='author_info_wrapper'>
+                <p className='author_info_title'>{item.title}</p>
+                <p className='author_info_name'>{item.author} - <a href={item.authorLink}>{item.authorLink}</a></p>
+              </div>
+            </div>
+            <div className='content_container'>
+              <div className="date">{item.published ? item.published : 'unavailable'}</div>
+              <a className="date" href={item.link}>{item.link}</a>
+              <div className="content">{contentHandler(item)}</div>
+              <div style={{ display: item.tags ? 'flex' : 'none' }}
+                className='tag_container'
+              >
+                { Array.isArray(item.tags) ?
+                  item.tags.map((tag, index) => {
+                    return (
+                      <div className="tag"
+                          key={index}
+                      >
+                        {tag}
+                      </div>)
+                    })
+                  : null
+                }
+                </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
   return (
     <div className="App">
       <div className='info-container'>
+        <div>
+          <label htmlFor="filterInput">Filter feeds by: </label>
+          <input
+            id="filterInput"
+            type="text"
+            value={filterTerm}
+            onChange={e => setFilterTerm(e.target.value)}
+          />
+        </div>
         <button className='button download_btn' type="submit" onClick={download}>Download</button>
         <ul>
         {
-          feedData.length ? feedData.slice(startIndex, endIndex).map((item, index) => (
-            <li key={index}>
-              <div className="author_container">
-                <img className='author_img' src={item.logo} />
-                <div className='author_info_wrapper'>
-                  <p className='author_info_title'>{item.title}</p>
-                  <p className='author_info_name'>{item.author} - <a href={item.authorLink}>{item.authorLink}</a></p>
-                </div>
-              </div>
-              <div className='content_container'>
-                <div className="date">{item.published ? item.published : 'unavailable'}</div>
-                <a className="date" href={item.link}>{item.link}</a>
-                <div className="content">{contentHandler(item)}</div>
-                <div style={{ display: item.tags ? 'flex' : 'none' }}
-                  className='tag_container'
-                >
-                  { Array.isArray(item.tags) ?
-                    item.tags.map((tag, index) => {
-                      return (
-                        <div className="tag"
-                             key={index}
-                        >
-                          {tag}
-                        </div>)
-                      })
-                    : null
-                  }
-                  </div>
-              </div>
-            </li>
-          )) : null
+          filteredItems.length ? 
+            renderFeeds(filteredItems)
+          :
+          feedData.length ? 
+            filteredItems(feedData.slice(startIndex, endIndex))
+          : 
+            null
         }
         </ul>
         {
